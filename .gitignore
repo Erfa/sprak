@@ -1,0 +1,7 @@
+# Eclipse
+.project
+.pydevproject
+
+# Annoying files
+*~
+*.pyc
