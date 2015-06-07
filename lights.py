@@ -11,3 +11,9 @@ LIGHT_HEAD        = 6
 class LightsManager(object):
     def enable(self, light):
         logging.debug('Enabling light {}'.format(light))
+        # Implement this
+
+    def disable(self, light):
+        logging.debug('Disabling light {}'.format(light))
+        # TODO: implement this
+        pass
