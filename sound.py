@@ -1,37 +1,34 @@
 import logging
-import pyglet
-from pyglet.resource import ResourceNotFoundException
+import pygame
 from threading import Thread
-
 
 class SoundManager(Thread):
     def __init__(self):
-        Thread.__init__(self)
+        Thread.__init__(self)        
+        pygame.init()
+        pygame.mixer.init()
+        self._sounds = {}
         self.daemon = True
 
     def run(self):
         logging.debug('Starting sound manager')
-        pyglet.app.run()
 
     def play(self, path, loop=False, volume=None):
         logging.debug('Playing sound {}, loop={}'.format(path, loop))
 
-        try:
-            media = pyglet.resource.media(path)
-            player = media.play()
+        if not path in self._sounds:
+            self._sounds[path] = pygame.mixer.Sound(path)
 
-            logging.info('Volume is at {}'.format(player.volume))
+        loops = -1 if loop else 1
+        player = self._sounds[path].play(loops=loops)
 
-            if loop:
-                player.eos_action = player.EOS_LOOP
-    
-            sound = Sound(path, player)
+        logging.info('Volume is at {}'.format(player.get_volume()))
 
-            if volume:
-                sound.set_volume(volume)
-            return sound
-        except ResourceNotFoundException:
-            logging.error('Could not find sound {}'.format(path))
+        sound = Sound(path, player)
+
+        if volume:
+            sound.set_volume(volume)
+        return sound
 
 class Sound(object):
     def __init__(self, path, player):
@@ -40,7 +37,7 @@ class Sound(object):
 
     def set_volume(self, volume):
         logging.debug('Setting volume of {} to {}'.format(self.path, volume))
-        self.player.volume = volume
+        self.player.set_volume(volume)
         return self
 
     def is_playing(self):
