@@ -1,6 +1,7 @@
 from Queue import Queue
 import logging
-from pymouse import PyMouseEvent
+import pygame
+from pygame.constants import QUIT, K_ESCAPE, K_F11
 from threading import Thread
 from time import sleep
 
@@ -8,8 +9,8 @@ from lights import LIGHT_YES, LIGHT_NO
 
 
 BUTTON_PRIMARY = 1
-BUTTON_SECONDARY = 2
-BUTTON_MIDDLE = 3
+BUTTON_MIDDLE = 2
+BUTTON_SECONDARY = 3
 BUTTON_SCROLL_UP = 4
 BUTTON_SCROLL_DOWN = 5
 
@@ -24,9 +25,11 @@ class EventQueueWorker(Thread):
             self.queue.get(True).run()
 
 
-class SprakController(PyMouseEvent):
+class SprakController(object):
     def __init__(self, sounds, lights):
-        PyMouseEvent.__init__(self)
+        pygame.display.set_mode((320, 240))
+        pygame.display.toggle_fullscreen()
+
         self.sounds           = sounds
         self.lights           = lights
         self.background_sound = None
@@ -46,21 +49,33 @@ class SprakController(PyMouseEvent):
 
         logging.debug('Setting volume to {}'.format(volume))
 
-    def click(self, x, y, button, press):
-        if press:
+    def run(self):
+        while True:
             try:
-                if button == BUTTON_PRIMARY:
-                    self.event_queue.put(YesEvent(self))
-                elif button == BUTTON_SECONDARY:
-                    self.event_queue.put(NoEvent(self))
-                elif button == BUTTON_MIDDLE:
-                    self.event_queue.put(SprakPowerButtonEvent(self))
-                elif button == BUTTON_SCROLL_UP:
-                    self.set_volume(self.volume + 0.1)
-                elif button == BUTTON_SCROLL_DOWN:
-                    self.set_volume(self.volume - 0.1)
+                event = pygame.event.wait()
+
+                if event.type == QUIT:
+                    break
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == K_ESCAPE:
+                        break
+                    elif event.key == K_F11:
+                        pygame.display.toggle_fullscreen()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == BUTTON_PRIMARY:
+                        self.event_queue.put(YesEvent(self))
+                    elif event.button == BUTTON_SECONDARY:
+                        self.event_queue.put(NoEvent(self))
+                    elif event.button == BUTTON_MIDDLE:
+                        self.event_queue.put(SprakPowerButtonEvent(self))
+                    elif event.button == BUTTON_SCROLL_UP:
+                        self.set_volume(self.volume + 0.1)
+                    elif event.button == BUTTON_SCROLL_DOWN:
+                        self.set_volume(self.volume - 0.1)
             except Exception as e:
                 logging.error(e)
+
+        pygame.quit()
 
 class SprakEvent(object):
     def __init__(self, sprak, name):
@@ -68,13 +83,15 @@ class SprakEvent(object):
         self.name = name
 
     def run(self):
-        pass
+        logging.debug('Running event {}'.format(self.name))
 
 class SprakPowerButtonEvent(SprakEvent):
     def __init__(self, sprak):
         SprakEvent.__init__(self, sprak, 'PowerButton')
 
     def run(self):
+        SprakEvent.run(self)
+
         if self.sprak.is_on:
             logging.debug('Turning off sprak')
             self.sprak.background_sound.fadeout(1000)
@@ -120,6 +137,8 @@ class ResponseEvent(SprakEvent):
         self.sprak.lights.disable(self.light_id)
 
     def run(self):
+        SprakEvent.run(self)
+
         if self.sprak.is_on:
             self.sprak.sounds.play('snd/response.wav').set_volume(1.0)
             self._disable_light()
