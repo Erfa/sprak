@@ -30,6 +30,7 @@ class SprakController(object):
         pygame.display.set_mode((320, 240))
         pygame.display.toggle_fullscreen()
 
+        self.running          = True
         self.sounds           = sounds
         self.lights           = lights
         self.background_sound = None
@@ -50,32 +51,37 @@ class SprakController(object):
         logging.debug('Setting volume to {}'.format(volume))
 
     def run(self):
-        while True:
-            try:
-                event = pygame.event.wait()
+        try:
+            while self.running:
+                try:
+                    event = pygame.event.wait()
 
-                if event.type == QUIT:
-                    break
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == K_ESCAPE:
+                    if event.type == QUIT:
+                        logging.debug('Received pygame quit event')
                         break
-                    elif event.key == K_F11:
-                        pygame.display.toggle_fullscreen()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == BUTTON_PRIMARY:
-                        self.event_queue.put(YesEvent(self))
-                    elif event.button == BUTTON_SECONDARY:
-                        self.event_queue.put(NoEvent(self))
-                    elif event.button == BUTTON_MIDDLE:
-                        self.event_queue.put(SprakPowerButtonEvent(self))
-                    elif event.button == BUTTON_SCROLL_UP:
-                        self.set_volume(self.volume + 0.1)
-                    elif event.button == BUTTON_SCROLL_DOWN:
-                        self.set_volume(self.volume - 0.1)
-            except Exception as e:
-                logging.error(e)
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == K_ESCAPE:
+                            self.event_queue.put(QuitEvent(self))
+                        elif event.key == K_F11:
+                            pygame.display.toggle_fullscreen()
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == BUTTON_PRIMARY:
+                            self.event_queue.put(YesEvent(self))
+                        elif event.button == BUTTON_SECONDARY:
+                            self.event_queue.put(NoEvent(self))
+                        elif event.button == BUTTON_MIDDLE:
+                            self.event_queue.put(SprakPowerButtonEvent(self))
+                        elif event.button == BUTTON_SCROLL_UP:
+                            self.set_volume(self.volume + 0.1)
+                        elif event.button == BUTTON_SCROLL_DOWN:
+                            self.set_volume(self.volume - 0.1)
+                except Exception as e:
+                    logging.error(e)
 
-        pygame.quit()
+            logging.debug('Stopping game')
+        finally:
+            pygame.quit()
+
 
 class SprakEvent(object):
     def __init__(self, sprak, name):
@@ -84,6 +90,14 @@ class SprakEvent(object):
 
     def run(self):
         logging.debug('Running event {}'.format(self.name))
+
+class QuitEvent(SprakEvent):
+    def __init__(self, sprak):
+        SprakEvent.__init__(self, sprak, 'Quit')
+
+    def run(self):
+        SprakEvent.run(self)
+        self.sprak.running = False
 
 class SprakPowerButtonEvent(SprakEvent):
     def __init__(self, sprak):
