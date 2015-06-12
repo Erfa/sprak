@@ -172,4 +172,3 @@ class YesEvent(ResponseEvent):
 class NoEvent(ResponseEvent):
     def __init__(self, sprak):
         ResponseEvent.__init__(self, sprak, 'No', LIGHT_NO)
-
