@@ -95,7 +95,7 @@ class SprakPowerButtonEvent(SprakEvent):
         if self.sprak.is_on:
             logging.debug('Turning off sprak')
             self.sprak.background_sound.fadeout(1000)
-            self.sprak.sounds.play('snd/fly-by.wav', fadein=1000)
+            self.sprak.sounds.play('snd/fly-by.wav')
             self.sprak.is_on = False
 
             for _i in range(24):
@@ -107,7 +107,7 @@ class SprakPowerButtonEvent(SprakEvent):
                 sleep(0.04)
         else:
             logging.debug('Turning on sprak')
-            self.sprak.background_sound = self.sprak.sounds.play('snd/background.wav', loops=-1, fadein=1)
+            self.sprak.background_sound = self.sprak.sounds.play('snd/background.wav', loops=-1, fadein=1000)
 
             self.sprak.sounds.play('snd/ascend.wav')
             sleep(0.097)
