@@ -1,5 +1,6 @@
 import logging
 import pygame
+import os
 from threading import Thread
 
 class SoundManager(Thread):
@@ -17,6 +18,9 @@ class SoundManager(Thread):
         logging.debug('Playing sound {}, loops={}'.format(path, loops))
 
         if not path in self._sounds:
+            d = os.path.dirname(os.path.realpath(__file__))
+            path = os.path.join(d, path)
+            print path
             self._sounds[path] = pygame.mixer.Sound(path)
 
         channel = self._sounds[path].play(loops=loops, fade_ms=fadein)
