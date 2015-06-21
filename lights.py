@@ -1,19 +1,18 @@
 import logging
+import RPi.GPIO as GPIO
 
-LIGHT_YES         = 0
-LIGHT_NO          = 1
-LIGHT_BODY_LOWER  = 2
-LIGHT_BODY_MIDDLE = 3
-LIGHT_BODY_UPPER  = 4
-LIGHT_STOMAGE     = 5
-LIGHT_HEAD        = 6
+LIGHT_YES         = 18
+LIGHT_NO          = 17
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(LIGHT_YES, GPIO.OUT)
+GPIO.setup(LIGHT_NO, GPIO.OUT)
 
 class LightsManager(object):
     def enable(self, light):
         logging.debug('Enabling light {}'.format(light))
-        # Implement this
+        GPIO.output(light, False)
 
     def disable(self, light):
         logging.debug('Disabling light {}'.format(light))
-        # TODO: implement this
-        pass
+        GPIO.output(light, True)
